@@ -24,22 +24,15 @@
 		"languages": [
 			{
 				"id": "kareljava",
-				"aliases": [
-					"kareljava"
-				],
-				"extensions": [
-					"kj"
-				],
+				"aliases": ["KarelJava","kareljava"],
+				"extensions": ["kj"],
+				"icon": {"dark": "./icons/kj-large.png","light": "./icons/kj-large.png"},
 				"configuration": "./lang-configuration/kareljava-language-configuration.json"
 			},
 			{
 				"id": "karelpascal",
-				"aliases": [
-					"karelpascal"
-				],
-				"extensions": [
-					"kp"
-				],
+				"aliases": ["karelpascal"],
+				"extensions": ["kp"],
 				"configuration": "./lang-configuration/karelpascal-language-configuration.json"
 			}
 		],
@@ -58,7 +51,7 @@
 		"snippets": [
 			{
 			  "language": "kareljava",
-			  "path": "./snippets/kareljava.code-snippets"
+			  "path": "./snippets/kareljava.code-snippets"			  
 			},
 			{
 			  "language": "karelpascal",

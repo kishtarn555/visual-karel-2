@@ -14,12 +14,25 @@ import {
 	CompletionItemKind,
 	TextDocumentPositionParams,
 	TextDocumentSyncKind,
-	InitializeResult
+	InitializeResult,
+	integer,
+	DocumentOnTypeFormattingRequest
 } from 'vscode-languageserver/node';
 
 import {
+	Position,
 	TextDocument
 } from 'vscode-languageserver-textdocument';
+import { Console } from 'console';
+
+class functionInfo {
+	name:string;
+	parameter:string|null;
+	constructor (n: string, p: string | null) {
+		this.name=n;
+		this.parameter=p;
+	}
+}
 
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -31,7 +44,12 @@ const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 let hasConfigurationCapability = false;
 let hasWorkspaceFolderCapability = false;
 let hasDiagnosticRelatedInformationCapability = false;
-let functions: string[] = [];
+
+let functions: functionInfo[] = [];
+let funDict : Record<string, number> = {};
+const instructions = ["move","turnleft", "turnoff", "putbeeper", "pickbeeper", "return"];
+const keywords = ["class","program", "iterate","if", "else", "turnoff", "while" ];
+
 
 connection.onInitialize((params: InitializeParams) => {
 	const capabilities = params.capabilities;
@@ -106,7 +124,7 @@ connection.onDidChangeConfiguration(change => {
 	}
 
 	// Revalidate all open text documents
-	documents.all().forEach(validateTextDocument);
+	documents.all().forEach(getFunctions);
 });
 
 function getDocumentSettings(resource: string): Thenable<ExampleSettings> {
@@ -132,65 +150,100 @@ documents.onDidClose(e => {
 // The content of a text document has changed. This event is emitted
 // when the text document first opened or when its content has changed.
 documents.onDidChangeContent(change => {
-	validateTextDocument(change.document);
-	getFunctions(change.document);
+	getFunctions(change.document);	
 });
-
-function getFunctions(textDocument:TextDocument) {
-	functions=[];
-	const text = textDocument.getText();
-	const regex = /\\b[_a-zA-Z][_a-zA-Z0-9]*\\b/g;
-	const words = text.match(regex);
-	words?.forEach((text, index) => {		
-		if (index==0) 
-			return;
-		if (words[index-1]=="define"||words[index-1]=="void") {
-			functions.push(text);
+function error(start:number, end:number,  msg:string, textDocument:TextDocument) :Diagnostic{
+	return {
+		severity:DiagnosticSeverity.Error,
+		source:"ex",
+		message:msg,
+		range:{
+			start:textDocument.positionAt(start),
+			end:textDocument.positionAt(end)
 		}
-	});
+	};
 	
 }
-async function validateTextDocument(textDocument: TextDocument): Promise<void> {
-	// In this simple example we get the settings for every validate run.
+async function getFunctions(textDocument:TextDocument) : Promise<void> {
 	const settings = await getDocumentSettings(textDocument.uri);
 
-
-	// The validator creates diagnostics for all uppercase words length 2 and more
+	functions=[];
+	funDict={};
 	const text = textDocument.getText();
-	let problems = 0;
+	const regex = /\b(define|void)(\s+)([_a-zA-Z][_a-zA-Z0-9]*)\s*\(([_a-zA-Z][_a-zA-Z0-9]*)?\)/g;
+	let m : RegExpExecArray|null;
+	let problems =0;
 	const diagnostics: Diagnostic[] = [];
-	
-	const validCharacters = /[a-zA-Z0-9;()_/*&!|{}]|\s/;
-	for (let i = 0; i < text.length && problems < settings.maxNumberOfProblems; i++) {
-		if (!validCharacters.test(text[i].toString()))	{
-			problems++;
-			const diagnostic: Diagnostic= {
-				severity: DiagnosticSeverity.Error,
-				range: {
-					start: textDocument.positionAt(i),
-					end: textDocument.positionAt(i)
-				},
-				source: "karelserver",
-				message:`Caracter ilegal: '${text[i]}'`					
-			};
-			if (hasDiagnosticRelatedInformationCapability) {
-				diagnostic.relatedInformation = [
-					{
-						location: {
-							uri: textDocument.uri,
-							range: Object.assign({}, diagnostic.range)
-						},
-						message: ''
-					}
-				];
+	while((m = regex.exec(text))) {
+		const funcname :string= m[3];
+		const funcArg :string | null= m[4]!=""?m[4]:m[5];
+		const funcNameIndex=m.index+m[1].length+m[2].length;
+		if (Object.prototype.hasOwnProperty.call(funDict,funcname)) {
+			if (problems < settings.maxNumberOfProblems) {
+				problems++;
+				diagnostics.push(
+					error(funcNameIndex,funcNameIndex, `${funcname} fue definida anteriormente`,textDocument )
+				);
 			}
-			diagnostics.push(diagnostic);
+			continue;
 		}
-	}
-	
+		if (keywords.indexOf(funcname)!=-1|| instructions.indexOf(funcname)!=-1) {
+			if (problems < settings.maxNumberOfProblems) {
+				problems++;
+				diagnostics.push(
+					error(
+						funcNameIndex,
+						funcNameIndex, 
+						`${funcname} es una palabra reservada y no puede ser usada como nombre de una nueva instruccion.`, 
+						textDocument
+					)
+				);
+			}
+			continue;
+		}
+		functions.push(
+			new functionInfo(funcname, funcArg)
+		);
+		funDict[funcname]=functions.length-1;
+	}	
+	validateTextDocument(textDocument, diagnostics);
+	connection.sendDiagnostics({uri: textDocument.uri,diagnostics});
+}
 
-	// Send the computed diagnostics to VSCode.
-	connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
+function validateTextDocument(textDocument:TextDocument, diagnostics:Diagnostic[])  {
+	const text = textDocument.getText();
+	const pattern = /\b([_a-zA-Z][_a-zA-Z0-9]*)\s*\(\s*([^)]*)\s*\)/g;
+	let m : RegExpExecArray | null;
+	
+	while ((m = pattern.exec(text))) {
+		const name = m[1];
+		const args = m[2];
+		if (Object.prototype.hasOwnProperty.call(funDict, name)) {
+			const f = functions[funDict[name]];
+			if (f.parameter == null && args!="") {
+				diagnostics.push(
+					error(m.index, m.index, `${name} no espera parametros`,textDocument)
+				);
+			} else if(f.parameter != null && args=="") {
+				diagnostics.push(
+					error(m.index, m.index, `${name} espera un parametro`,textDocument)
+				);
+			}
+			continue;
+		}
+		if (instructions.indexOf(name)!=-1) {
+			if (args!="")
+				diagnostics.push(
+					error(m.index, m.index, `Las instrucciones no requiere parametros`,textDocument)
+				);
+			continue;
+		} 
+		if (keywords.indexOf(name)!=-1) {
+			continue;
+		}
+		diagnostics.push(error(m.index, m.index, `${name} no fue declarada`,textDocument));
+	}
+	connection.sendDiagnostics({uri:textDocument.uri, diagnostics});
 }
 
 connection.onDidChangeWatchedFiles(_change => {
@@ -213,44 +266,49 @@ connection.onCompletion(
 			{
 				label: 'turnleft',
 				kind: CompletionItemKind.Method,
-				data: 2
+				data: 1
 			},
 			{
 				label: 'turnoff',
 				kind: CompletionItemKind.Method,
-				data: 3
+				data: 1
 			},
 			{
 				label: 'putbeeper',
 				kind: CompletionItemKind.Method,
-				data: 4
+				data: 1
 			},
 			{
 				label: 'pickbeeper',
 				kind: CompletionItemKind.Method,
-				data: 5
+				data: 1
 			},
 			{
 				label: 'succ',
 				kind: CompletionItemKind.Method,
-				data: 6
+				data: 2
 			},
 			{
 				label: 'pred',
 				kind: CompletionItemKind.Method,
-				data: 7
+				data: 2
 			},
 			{
 				label: 'iszero',
 				kind: CompletionItemKind.Method,
-				data: 7
+				data: 3
+			},
+			{
+				label: 'iterate',
+				kind: CompletionItemKind.Keyword,
+				data: 3
 			}
 		];
 		functions.forEach((func, index)=>{
 			suggestions.push({
-				label: func,
+				label: func.name,
 				kind: CompletionItemKind.Method,
-				data:0
+				data:15
 			});
 		});
 		return suggestions;
@@ -261,23 +319,29 @@ connection.onCompletion(
 // the completion list.
 connection.onCompletionResolve(
 	(item: CompletionItem): CompletionItem => {
+		const labeldocs: {[id:string]:string} = {
+			"move": "Karel avanza hacia donde esta orientado.",
+			"turnleft": "Karel gira 90° en sentido contra-horario.",
+			"turnoff": "Karel termina y no ejecutara ninguna instruccion más.",
+			"pickbeeper": "Karel toma un zumbador del suelo y lo pone en su mochila.",
+			"putbeeper": "Karel deja un zumbador en el suelo de su mochila."
+		};
 		switch (item.data){
-			case 1:
-				item.detail = 'detalles de move';
-				item.documentation = 'Mueve a Karel';
+			case 1:				
+				item.detail = 'instruccion de karel';
+				item.documentation=labeldocs[item.label];
 				break;
 			case 2:
-				item.detail = 'detalles de turnleft';
-				item.documentation = 'Gira a Karel 90° a la izquierda';
+				item.detail = 'operador numerico';
 				break;
 			case 3:
-				item.detail = 'detalles de turnleft';
-				item.documentation = 'Termina la ejecución de Karel';
+				item.detail = 'iszero';
+				item.documentation = 'Regrese verdaderro si el numero es cero';
 				break;			
 			case 4:
 				item.detail = 'detalles de putbeeper';
 				item.documentation = 'Deja un zumbador de la mochila en el suelo';
-				break;
+				break;			
 		}
 
 		return item;
