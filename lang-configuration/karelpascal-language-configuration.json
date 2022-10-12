@@ -10,8 +10,7 @@
     // symbols that are auto closed when typing
     "autoClosingPairs": [
         ["{", "}"],
-        ["(", ")"],
-        ["inicio", "fin;"]
+        ["(", ")"]
     ],
     // symbols that can be used to surround a selection
     "surroundingPairs": [

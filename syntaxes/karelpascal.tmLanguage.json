@@ -2,19 +2,28 @@
 	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
 	"name": "karelpascal",
 	"patterns": [		
-		{
-			"include": "#comment"
-		},
-		{
-			"include": "#program-declatarion"
-		}
+		{"include": "#comment"},
+		{"include": "#program-start"},
+		{"include": "#program-end"},
+		{"include": "#exec-start"},
+		{"include": "#exec-end"},
+		{"include": "#control"},
+		{"include": "#keywords"},
+		{"include": "#invoke"},
+		{"include": "#number"}
 	],
 	"repository": {
 		"keywords": {
-			"patterns": [{
-				"name": "keyword.control.karelpascal",
-				"match": "\\b(if|while|iterate|return)\\b"
-			}]
+			"patterns": [
+				{
+					"name": "keyword.control.karelpascal",
+					"match": "\\b(si|sino|mientras|repetir|sal-de-instrucci[óo]n|si-no)\\b"
+				},
+				{
+					"name": "keyword.control.verbose",
+					"match": "\\b(como|entonces|veces)\\b"				
+				}
+			]	
 		},
 		"comment": {
 			"patterns": [
@@ -35,43 +44,30 @@
 				}				
 			]
 		},
-		"program-declatarion":{
-			"begin": "\\b(iniciar-programa)\\b",
-			"beginCaptures": {
-				"1": {"name": "keyword.other.iniciar-programa.karelpascal"}
-			},
-			"patterns": [
-				{"include": "#comment"},
-				{"include": "#main-program"}
-			],
-			"end": "\\b(finalizar-programa)\\b",
-            "endCaptures": {
-                "1": {"name":"keyword.other.iniciar-programa.karelpascal"}
-            }
+		"program-start":{
+			"match": "\\b(iniciar-programa)\\b",
+			"name": "keyword.other.iniciar-programa"
 		},
-        "main-program": {
-            "begin": "\\b(inicia-ejecucion)\\b",
-            "beginCaptures": {
-                "1":{"name":"keyword.other.main-begin"}
-            },
-            "patterns": [
-                {"include": "#comment"},
-                {"include": "#expr"}
-            ],
-            "end": "\\b(termina-ejecucion)\\b",
-            "endCaptures": {
-                "1":{"name":"keyword.other.main-end"}
-            }
-        },
-        "expr":{
-            "patterns": [
-                {"include": "#instruction"}
-            ]
-        },
-        "instruction":{
-            "match": "([A-Za-zÀ-ÖØ-öø-ÿ_][A-Za-zÀ-ÖØ-öø-ÿ0-9_-]*)\\s*;",
+		"program-end":{
+			"match": "\\b(finalizar-programa)\\b",
+			"name": "keyword.other.iniciar-programa"
+		},
+		"exec-start":{
+			"match": "\\b(inicia-ejecuci[óo]n)\\b",
+			"name": "keyword.other.iniciar-programa"
+		},
+		"exec-end":{
+			"match": "\\b(termina-ejecuci[óo]n)\\b",
+			"name": "keyword.other.iniciar-programa"
+		},
+        "invoke":{
+            "match": "\\b([A-Za-zÀ-ÖØ-öø-ÿ_][A-Za-zÀ-ÖØ-öø-ÿ0-9_-]*)\\b",
             "name":"entity.name.function"
-        }
+        },
+		"number": {
+			"match": "\\d+",
+			"name":"constant.numeric"
+		}
 	},
 	"scopeName": "source.kp"
 }

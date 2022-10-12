@@ -31,6 +31,16 @@
 					"kj"
 				],
 				"configuration": "./lang-configuration/kareljava-language-configuration.json"
+			},
+			{
+				"id": "karelpascal",
+				"aliases": [
+					"karelpascal"
+				],
+				"extensions": [
+					"kp"
+				],
+				"configuration": "./lang-configuration/karelpascal-language-configuration.json"
 			}
 		],
 		"grammars":[
@@ -38,14 +48,23 @@
 				"language": "kareljava",
 				"scopeName": "source.kj",
 				"path": "./syntaxes/kareljava.tmLanguage.json"
+			},
+			{
+				"language": "karelpascal",
+				"scopeName": "source.kp",
+				"path": "./syntaxes/karelpascal.tmLanguage.json"
 			}
 		],
 		"snippets": [
 			{
 			  "language": "kareljava",
 			  "path": "./snippets/kareljava.code-snippets"
+			},
+			{
+			  "language": "karelpascal",
+			  "path": "./snippets/karelpascal.code-snippets"
 			}
-		  ],
+		],
 		"configuration": {
 			"type": "object",
 			"title": "Example configuration",

@@ -1,0 +1,14 @@
+{
+	"programa":{
+		"scope": "karelpascal",
+		"isFileTemplate": true,
+		"prefix": "iniciar-programa",
+		"body": [
+			"iniciar-programa",			
+			"    inicia-ejecucion",	
+			"        $0",
+			"    termina-ejecucion",
+			"finalizar-programa"
+		]
+	}
+}

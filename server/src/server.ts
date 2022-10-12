@@ -31,6 +31,7 @@ const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 let hasConfigurationCapability = false;
 let hasWorkspaceFolderCapability = false;
 let hasDiagnosticRelatedInformationCapability = false;
+let functions: string[] = [];
 
 connection.onInitialize((params: InitializeParams) => {
 	const capabilities = params.capabilities;
@@ -132,8 +133,23 @@ documents.onDidClose(e => {
 // when the text document first opened or when its content has changed.
 documents.onDidChangeContent(change => {
 	validateTextDocument(change.document);
+	getFunctions(change.document);
 });
 
+function getFunctions(textDocument:TextDocument) {
+	functions=[];
+	const text = textDocument.getText();
+	const regex = /\\b[_a-zA-Z][_a-zA-Z0-9]*\\b/g;
+	const words = text.match(regex);
+	words?.forEach((text, index) => {		
+		if (index==0) 
+			return;
+		if (words[index-1]=="define"||words[index-1]=="void") {
+			functions.push(text);
+		}
+	});
+	
+}
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	// In this simple example we get the settings for every validate run.
 	const settings = await getDocumentSettings(textDocument.uri);
@@ -141,15 +157,13 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 
 	// The validator creates diagnostics for all uppercase words length 2 and more
 	const text = textDocument.getText();
-	const pattern = /\b[A-Z]{2,}\b/g;
-	let m: RegExpExecArray | null;
-
 	let problems = 0;
 	const diagnostics: Diagnostic[] = [];
 	
 	const validCharacters = /[a-zA-Z0-9;()_/*&!|{}]|\s/;
-	for (let i = 0; i < text.length; i++) {
+	for (let i = 0; i < text.length && problems < settings.maxNumberOfProblems; i++) {
 		if (!validCharacters.test(text[i].toString()))	{
+			problems++;
 			const diagnostic: Diagnostic= {
 				severity: DiagnosticSeverity.Error,
 				range: {
@@ -173,37 +187,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 			diagnostics.push(diagnostic);
 		}
 	}
-	while ((m = pattern.exec(text)) && problems < settings.maxNumberOfProblems) {
-		problems++;
-		const diagnostic: Diagnostic = {
-			severity: DiagnosticSeverity.Warning,
-			range: {
-				start: textDocument.positionAt(m.index),
-				end: textDocument.positionAt(m.index + m[0].length)
-			},
-			message: `${m[0]} is all uppercase.`,
-			source: 'ex'
-		};
-		if (hasDiagnosticRelatedInformationCapability) {
-			diagnostic.relatedInformation = [
-				{
-					location: {
-						uri: textDocument.uri,
-						range: Object.assign({}, diagnostic.range)
-					},
-					message: 'Spelling matters'
-				},
-				{
-					location: {
-						uri: textDocument.uri,
-						range: Object.assign({}, diagnostic.range)
-					},
-					message: 'Particularly for names'
-				}
-			];
-		}
-		diagnostics.push(diagnostic);
-	}
+	
 
 	// Send the computed diagnostics to VSCode.
 	connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
@@ -220,7 +204,7 @@ connection.onCompletion(
 		// The pass parameter contains the position of the text document in
 		// which code complete got requested. For the example we ignore this
 		// info and always provide the same completion items.
-		return [
+		const suggestions = [
 			{
 				label: 'move',
 				kind: CompletionItemKind.Method,
@@ -262,6 +246,14 @@ connection.onCompletion(
 				data: 7
 			}
 		];
+		functions.forEach((func, index)=>{
+			suggestions.push({
+				label: func,
+				kind: CompletionItemKind.Method,
+				data:0
+			});
+		});
+		return suggestions;
 	}
 );
 
