@@ -1,0 +1,77 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "karelpascal",
+	"patterns": [		
+		{
+			"include": "#comment"
+		},
+		{
+			"include": "#program-declatarion"
+		}
+	],
+	"repository": {
+		"keywords": {
+			"patterns": [{
+				"name": "keyword.control.karelpascal",
+				"match": "\\b(if|while|iterate|return)\\b"
+			}]
+		},
+		"comment": {
+			"patterns": [
+				{
+					"name": "comment.block.karelpascal",
+					"begin": "\\{",
+					"beginCaptures": {
+						"0": {
+							"name": "punctuation.definition.comment.karelpascal"
+						}
+					},
+					"end": "\\}",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.definition.comment.karelpascal"
+						}
+					}
+				}				
+			]
+		},
+		"program-declatarion":{
+			"begin": "\\b(iniciar-programa)\\b",
+			"beginCaptures": {
+				"1": {"name": "keyword.other.iniciar-programa.karelpascal"}
+			},
+			"patterns": [
+				{"include": "#comment"},
+				{"include": "#main-program"}
+			],
+			"end": "\\b(finalizar-programa)\\b",
+            "endCaptures": {
+                "1": {"name":"keyword.other.iniciar-programa.karelpascal"}
+            }
+		},
+        "main-program": {
+            "begin": "\\b(inicia-ejecucion)\\b",
+            "beginCaptures": {
+                "1":{"name":"keyword.other.main-begin"}
+            },
+            "patterns": [
+                {"include": "#comment"},
+                {"include": "#expr"}
+            ],
+            "end": "\\b(termina-ejecucion)\\b",
+            "endCaptures": {
+                "1":{"name":"keyword.other.main-end"}
+            }
+        },
+        "expr":{
+            "patterns": [
+                {"include": "#instruction"}
+            ]
+        },
+        "instruction":{
+            "match": "([A-Za-zÀ-ÖØ-öø-ÿ_][A-Za-zÀ-ÖØ-öø-ÿ0-9_-]*)\\s*;",
+            "name":"entity.name.function"
+        }
+	},
+	"scopeName": "source.kp"
+}

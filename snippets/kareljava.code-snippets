@@ -1,0 +1,83 @@
+{
+	"class-program":{
+		"scope": "kareljava",
+		"prefix": "class",
+		"body": [
+			"class program {",
+			"    program() {",
+			"        $0",
+			"        turnoff();",			
+			"    }",			
+			"}"
+		],
+		"description": "Codigo esqueleto para KarelJava"
+	},
+	"define-instruction-parametro":{
+		"scope": "kareljava",
+		"prefix": "define",
+		"body": [
+			"define ${1:nombre} (${2:n}) {",
+			"    $0",			
+			"}"
+		],
+		"description": "Instruccion con parametro"
+	},
+	"define-instruction":{
+		"scope": "kareljava",
+		"prefix": "define",
+		"body": [
+			"define ${1:nombre} () {",
+			"    $0",			
+			"}"
+		],
+		"description": "Instruccion con parametro"
+	},
+	"void-instruction":{
+		"scope": "kareljava",
+		"prefix": "void",
+		"body": [
+			"void ${1:nombre} () {",
+			"    $0",
+			"}"
+		]
+	},
+	"void-instruction-parameter":{
+		"scope": "kareljava",
+		"prefix": "void",
+		"body": [
+			"void ${1:nombre} (${2:n}) {",
+			"    $0",
+			"}"
+		]
+	},
+	"iterate": {		
+		"scope": "kareljava",
+		"prefix": "iterate",
+		"body": [
+			"iterate (${1:10}) {",
+			"    $0",			
+			"}"
+		],
+		"description": "Ciclo iterate"
+	},
+	"while":{
+		"scope": "kareljava",
+		"prefix": "while",
+		"body": [
+			"while (${1:condicion}) {",
+			"    $0",
+			"}"
+		],
+		"description": "Ciclo while"
+	},
+	"if-statement":{
+		"scope": "kareljava",
+		"prefix": "if",
+		"body": [
+			"if (${1:condicion}) {",
+			"    $0",
+			"}"
+		],
+		"description": "Condicional if"
+	}
+}

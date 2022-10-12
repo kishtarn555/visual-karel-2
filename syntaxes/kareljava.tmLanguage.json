@@ -1,0 +1,82 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "kareljava",
+	"patterns": [		
+		{"include": "#comment"},
+		{"include": "#keywords"},
+		{"include": "#variable"},
+		{"include": "#class-program"},
+		{"include": "#method-definition"},
+		{"include": "#program-method"},
+		{"include": "#invoke"},
+		{"include": "#number"}
+	],
+	"repository": {
+		"keywords": {
+			"patterns": [{
+				"name": "keyword.control.kareljava",
+				"match": "\\b(if|while|iterate|return|else)\\b"
+			}]
+		},
+		"comment": {
+			"patterns": [
+				{
+					"name": "comment.block.kareljava",
+					"begin": "/\\*",
+					"beginCaptures": {
+						"0": {
+							"name": "punctuation.definition.comment.kareljava"
+						}
+					},
+					"end": "\\*/",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.definition.comment.kareljava"
+						}
+					}
+				},
+				{
+					"name":"comment.line.double-slash.kareljava",
+					"begin": "//",
+					"end": "$"
+				}
+			]
+		},
+		"class-program":{
+			"match": "\\b(class)\\s+(program)\\b",
+			"captures": {
+				"1":{"name":"keyword.other.class.kareljava"},
+				"2":{"name":"entity.name.class"}
+			}
+		},
+		"method-definition":{			
+			"match": "\\b(define|void)\\s+([a-zA-Z][a-zA-Z0-9_]*)\\b",
+			"captures": {
+				"1":{"name":"keyword.other.method"},
+				"2":{"name":"entity.name.function"}
+			}
+		},
+		"program-method": {
+			"match": "\\b(program)\\b",
+			"name": "keyword.other.program"
+		},
+		"number":{
+			"match": "\\d+",
+			"name":"constant.numeric"
+		},		
+		"karel-invoke": {
+			"match": "\\b(move|turnleft|turnoff|putbeeper|pickbeeper)\\b",
+			"name":"support.function.instruction"
+		},
+		"invoke": {
+			"match": "[a-zA-Z][a-zA-Z0-9_]*",
+			"name":"entity.name.function"
+		},
+		"variable": {
+			"match": "(?<=\\()\\s*[a-zA-Z][a-zA-Z0-9_]*\\s*(?=\\))",
+			"name":"variable.name"
+		}
+		
+	},
+	"scopeName": "source.kj"
+}
